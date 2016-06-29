@@ -273,6 +273,9 @@ public class DaemonCapsule extends Capsule {
         installCmd.add(i++, "--JavaHome");
         installCmd.add(i++, doubleQuote(getJavaHome().toAbsolutePath().normalize().toString()));
 
+        installCmd.add(i++, "--Jvm");
+        installCmd.add(i++, doubleQuote(findJvmDll()));
+
         // Add attrs
         installCmd.add(i++, "--Description");
         final String desc = getPropertyOrAttributeString(PROP_DESCRIPTION, ATTR_DESCRIPTION);
@@ -308,7 +311,7 @@ public class DaemonCapsule extends Capsule {
         i = addPropertyOrAttributeStringAsOptionDoubleQuote(installCmd, PROP_PASSWORD, ATTR_PASSWORD, "--ServicePassword", i);
 
         installCmd.add(i++, "--StartMode");
-        installCmd.add(i++, "Java");
+        installCmd.add(i++, "jvm");
 
         i = addPropertyOrAttributeStringAsOptionDoubleQuote(installCmd, PROP_CWD, ATTR_CWD, "--StartPath", i);
 
@@ -330,7 +333,7 @@ public class DaemonCapsule extends Capsule {
         }
 
         installCmd.add(i++, "--StopMode");
-        installCmd.add(i++, "Java");
+        installCmd.add(i++, "jvm");
 
         i = addPropertyOrAttributeStringAsOptionDoubleQuote(installCmd, PROP_CWD, ATTR_CWD, "--StopPath", i);
 
@@ -690,6 +693,24 @@ public class DaemonCapsule extends Capsule {
                 throw new IllegalStateException("Can't figure out the application's main class: nor 'Application-Class' neither 'Application' have been found");
         }
         return appClass;
+    }
+    
+    private String findJvmDll() {
+        String[] pathJvmDll = new String[] { //
+            "\\bin\\server\\jvm.dll", //
+            "\\bin\\client\\jvm.dll", //
+            "\\jre\\bin\\server\\jvm.dll", //
+            "\\jre\\bin\\client\\jvm.dll" };
+
+        for (String path : pathJvmDll) {
+            String fulPath = getJavaHome().toAbsolutePath().normalize().toString() + path;
+
+            if (Files.exists(new File(fulPath).toPath()))
+                return fulPath;
+        }
+
+        //not found, try with auto
+        return "auto";
     }
 
     private static Path findOwnJarFile() {
